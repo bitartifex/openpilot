@@ -96,6 +96,17 @@ class CarState(CarStateBase):
         ret.gearShifter = GearShifter.reverse
       else:
         ret.gearShifter = GearShifter.unknown
+    # MT gear selection
+    elif self.CP.carFingerprint in FEATURES["use_mt_gears"]:
+      gear = cp.vl["EMS19"]["CF_Ems_GearMT"]
+      if cp.vl["CLU15"]["CF_Clu_InhibitR"] == 1:
+        ret.gearShifter = GearShifter.reverse
+      elif gear == 7:
+        ret.gearShifter = GearShifter.neutral
+      elif gear in (0, 1, 2, 3, 4, 5, 6):
+        ret.gearShifter = GearShifter.drive
+      else:
+        ret.gearShifter = GearShifter.unknown
     # Gear Selecton - This is not compatible with all Kia/Hyundai's, But is the best way for those it is compatible with
     else:
       gear = cp.vl["LVR12"]["CF_Lvr_Gear"]
@@ -188,7 +199,7 @@ class CarState(CarStateBase):
     checks = [
       # address, frequency
       ("MDPS12", 50),
-      ("TCS13", 50),
+      #("TCS13", 50),
       ("TCS15", 10),
       ("CLU11", 50),
       ("ESP12", 100),
@@ -196,12 +207,22 @@ class CarState(CarStateBase):
       ("CGW4", 5),
       ("WHL_SPD11", 50),
       ("SAS11", 100),
-      ("SCC11", 50),
-      ("SCC12", 50),
+      #("SCC11", 50),
+      #("SCC12", 50),
       ("EMS12", 100),
       ("EMS16", 100),
     ]
-    if CP.carFingerprint in FEATURES["use_cluster_gears"]:
+
+    if CP.carFingerprint in FEATURES["use_mt_gears"]:
+      signals += [
+        ("CF_Clu_InhibitR", "CLU15", 0),
+        ("CF_Ems_GearMT", "EMS19", 0),
+      ]
+      checks += [
+        ("EMS19", 20),
+        ("CLU15", 5),
+      ]
+    elif CP.carFingerprint in FEATURES["use_cluster_gears"]:
       signals += [
         ("CF_Clu_InhibitD", "CLU15", 0),
         ("CF_Clu_InhibitP", "CLU15", 0),
@@ -227,6 +248,13 @@ class CarState(CarStateBase):
       ]
       checks += [
         ("LVR12", 100)
+      ]
+
+    if CP.carFingerprint not in FEATURES["use_mt_gears"]:
+      checks += [
+        ("TCS13", 50),
+        ("SCC11", 50),
+        ("SCC12", 50),
       ]
 
     return CANParser(DBC[CP.carFingerprint]['pt'], signals, checks, 0)

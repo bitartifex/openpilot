@@ -133,6 +133,14 @@ class CarInterface(CarInterfaceBase):
       tire_stiffness_factor = 0.5
       ret.lateralTuning.pid.kiBP, ret.lateralTuning.pid.kpBP = [[0.], [0.]]
       ret.lateralTuning.pid.kpV, ret.lateralTuning.pid.kiV = [[0.25], [0.05]]
+    elif candidate == CAR.VELOSTER_N:
+      ret.lateralTuning.pid.kf = 0.00006
+      ret.mass = 1377 + STD_CARGO_KG
+      ret.wheelbase = 2.64
+      ret.steerRatio = 15.4  #untuned
+      ret.lateralTuning.pid.kiBP, ret.lateralTuning.pid.kpBP = [[0.], [0.]]
+      ret.lateralTuning.pid.kpV, ret.lateralTuning.pid.kiV = [[0.25], [0.05]]
+      ret.transmissionType = car.CarParams.TransmissionType.manual
 
     ret.centerToFront = ret.wheelbase * 0.4
 
